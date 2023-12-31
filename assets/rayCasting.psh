@@ -1,0 +1,81 @@
+// Reference:
+// http://graphicsrunner.blogspot.de/2009/01/volume-rendering-101.html
+
+Texture3D<float> txVolume;
+Texture2D <float4> txPositionFront;
+Texture2D<float4> txPositionBack;
+
+SamplerState txPositionFront_sampler;
+
+cbuffer Constants
+{
+    float width;
+    float height;
+};
+
+// Constants and constant buffer variables
+static const uint g_iMaxIterations = 128;
+
+// Diagonal of a unit cube has length sqrt(3)
+static const float g_fStepSize = sqrt(3.f) / g_iMaxIterations;
+
+struct PSInput
+{
+    float4 pos : SV_POSITION;
+};
+
+struct PSOutput
+{
+    float4 Color: SV_TARGET;
+};
+
+float4 main(in PSInput PSIn) : SV_TARGET
+{
+    float2 g_fInvWindowSize = float2(width, height);
+    
+    // Get the current pixel location on the screen. 
+    // This is used to sample the front and back textures mapped to the cube	
+    float2 tex = PSIn.pos.xy * g_fInvWindowSize;
+
+    // Now read the cube frotn to back - "sample from front to back"	
+    float4 pos_front = txPositionFront.Sample(txPositionFront_sampler, tex);
+    float4 pos_back = txPositionBack.Sample(txPositionFront_sampler, tex);
+ 
+    // Calculate the direction the ray is cast
+    float3 dir = normalize(pos_back.rgb - pos_front.rgb);
+    
+    // Single step: direction times delta step - g_fStepSize is precaluclated
+    float3 step = g_fStepSize * dir;
+
+    // The current position - remember we start from the front
+    float3 v = pos_front.rgb;
+
+    // Accumulate result: value and transparency (alpha)
+    float2 result = float2(0, 0);
+ 
+    // iterate for the volume, sampling along the way at equidistant steps 
+    for (uint i = 0; i < g_iMaxIterations; ++i)
+    {
+        float2 src;
+
+        // sample the texture accumlating the result as we step through the texture
+        src = txVolume.Sample(txPositionFront_sampler, v).rr;
+
+        // filter
+        if(src.y < 0.15) 
+        {
+            src.y = 0;
+        }
+        
+        src.y *= .3f;
+
+        // Front to back blending
+        result += (1 - result.y) * src.y * src;
+
+        // Advance the current position
+        v += step;
+    }
+ 
+    return float4(result.r, 0.4 * result.r, result.r, 0);
+
+}
