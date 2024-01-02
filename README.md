@@ -6,7 +6,7 @@ Solution needs to be configured for x64 or x86 platform.
 
 <img src="https://github.com/zarnayp/DiligentDotnetVolumeRendering/assets/39445270/88bc1dee-b251-415b-99b4-e85be854e575" width="400">
 
-For referece was used:
+Used as reference:
 
 https://github.com/DanWestonCode/volume-rendering
 
