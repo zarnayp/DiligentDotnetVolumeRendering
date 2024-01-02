@@ -91,7 +91,7 @@ namespace DiligentVolumeRendering
             using var deviceContext = deviceContextOut;
             using var swapChain = swapChainOut;
 
-            VolumeRenderer vr = new VolumeRenderer(renderDevice, deviceContext, engineFactory);
+            using var volumeRenderer = new VolumeRenderer(renderDevice, deviceContext, engineFactory);
 
             var clock = new Stopwatch();
             clock.Start();
@@ -101,7 +101,7 @@ namespace DiligentVolumeRendering
                 var rtv = swapChain.GetCurrentBackBufferRTV();
                 var dsv = swapChain.GetDepthBufferDSV();
 
-                vr.Render(renderDevice, deviceContext, rtv, (int)swapChain.GetDesc().Width, (int)swapChain.GetDesc().Height);
+                volumeRenderer.Render(renderDevice, deviceContext, rtv, (int)swapChain.GetDesc().Width, (int)swapChain.GetDesc().Height);
 
                 swapChain.Present(0);
                 window.Invalidate(new Rectangle(0, 0, 1, 1)); //HACK for Vulkan

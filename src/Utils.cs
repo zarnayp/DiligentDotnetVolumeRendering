@@ -49,7 +49,7 @@ namespace DiligentVolumeRendering
             return result;
         }
 
-        public static ITextureView LoadVolume(IRenderDevice device, IDeviceContext deviceContext, string fileName)
+        public static ITexture LoadVolume(IRenderDevice device, IDeviceContext deviceContext, string fileName)
         {
             var descritpion = new TextureDesc { 
                 Type = ResourceDimension.Tex3d,
@@ -88,7 +88,7 @@ namespace DiligentVolumeRendering
                             }
                     };
                     var texture = device.CreateTexture(descritpion, rawData);
-                    return texture.GetDefaultView(TextureViewType.ShaderResource);
+                    return texture;
                 }
             }
         }

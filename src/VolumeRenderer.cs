@@ -26,9 +26,6 @@ namespace DiligentVolumeRendering
             public float Height;
         }
 
-        int width = -1;
-        int height = -1;
-
         IBuffer uniformBuffer;
         IBuffer windowSizeBuffer;
         IBuffer vertexBuffer;
@@ -42,10 +39,14 @@ namespace DiligentVolumeRendering
         IShaderResourceBinding shaderResourceBindingFront;
         IShaderResourceBinding shaderResourceBindingRayCasting;
 
-        ITextureView frontCubeTextureSRV;
-        ITextureView frontCubeTextureRTV;
-        ITextureView backCubeTextureSRV;
-        ITextureView backCubeTextureRTV;
+        ITexture frontCubeTexture;
+        ITexture backCubeTexture;
+        ITexture volumeTexture;
+
+        ITextureView frontCubeTextureSrv;
+        ITextureView frontCubeTextureRtv;
+        ITextureView backCubeTextureSrv;
+        ITextureView backCubeTextureRtv;
 
         Stopwatch clock = new Stopwatch();
 
@@ -117,7 +118,7 @@ namespace DiligentVolumeRendering
             
 
             // Back and front cube pipelines
-            using var vs = renderDevice.CreateShader(new()
+            var vs = renderDevice.CreateShader(new()
             {
                 FilePath = "cube.vsh",
                 ShaderSourceStreamFactory = shaderSourceFactory,
@@ -128,7 +129,7 @@ namespace DiligentVolumeRendering
                 SourceLanguage = ShaderSourceLanguage.Hlsl
             }, out _);
 
-            using var ps = renderDevice.CreateShader(new()
+            var ps = renderDevice.CreateShader(new()
             {
                 FilePath = "cube.psh",
                 ShaderSourceStreamFactory = shaderSourceFactory,
@@ -199,9 +200,10 @@ namespace DiligentVolumeRendering
             shaderResourceBindingBack = pipelineCubeBack.CreateShaderResourceBinding(true);
 
             // Raycasting pipeline
-            using var volumeTextureSrv = Utils.LoadVolume(renderDevice, deviceContext, "assets/skull_256x256x256_uint8.raw");
+            volumeTexture = Utils.LoadVolume(renderDevice, deviceContext, "assets/skull_256x256x256_uint8.raw");
+            var volumeTextureSrv = volumeTexture.GetDefaultView(TextureViewType.ShaderResource); ;
 
-            using var rayCastingVS = renderDevice.CreateShader(new()
+            var rayCastingVS = renderDevice.CreateShader(new()
             {
                 FilePath = "rayCasting.vsh",
                 ShaderSourceStreamFactory = shaderSourceFactory,
@@ -216,7 +218,7 @@ namespace DiligentVolumeRendering
 
             }, out _);
 
-            using var rayCastingPS = renderDevice.CreateShader(new()
+            var rayCastingPS = renderDevice.CreateShader(new()
             {
                 FilePath = "rayCasting.psh",
                 ShaderSourceStreamFactory = shaderSourceFactory,
@@ -339,8 +341,8 @@ namespace DiligentVolumeRendering
             deviceContext.SetVertexBuffers(0, new[] { vertexBuffer }, new[] { 0ul }, ResourceStateTransitionMode.Transition);
             deviceContext.SetIndexBuffer(indexBuffer, 0, ResourceStateTransitionMode.Transition);
             deviceContext.CommitShaderResources(shaderResourceBindingBack, ResourceStateTransitionMode.Transition);
-            deviceContext.ClearRenderTarget(backCubeTextureRTV, new(0.0f, 0.0f, 0.0f, 1.0f), ResourceStateTransitionMode.Transition);
-            deviceContext.SetRenderTargets(new[] { backCubeTextureRTV }, null, ResourceStateTransitionMode.Transition);
+            deviceContext.ClearRenderTarget(backCubeTextureRtv, new(0.0f, 0.0f, 0.0f, 1.0f), ResourceStateTransitionMode.Transition);
+            deviceContext.SetRenderTargets(new[] { backCubeTextureRtv }, null, ResourceStateTransitionMode.Transition);
             deviceContext.DrawIndexed(new()
             {
                 IndexType = Diligent.ValueType.UInt32,
@@ -353,8 +355,8 @@ namespace DiligentVolumeRendering
             deviceContext.SetVertexBuffers(0, new[] { vertexBuffer }, new[] { 0ul }, ResourceStateTransitionMode.Transition);
             deviceContext.SetIndexBuffer(indexBuffer, 0, ResourceStateTransitionMode.Transition);
             deviceContext.CommitShaderResources(shaderResourceBindingFront, ResourceStateTransitionMode.Transition);
-            deviceContext.ClearRenderTarget(frontCubeTextureRTV, new(0.0f, 0.0f, 0.0f, 1.0f), ResourceStateTransitionMode.Transition);
-            deviceContext.SetRenderTargets(new[] { frontCubeTextureRTV }, null, ResourceStateTransitionMode.Transition);
+            deviceContext.ClearRenderTarget(frontCubeTextureRtv, new(0.0f, 0.0f, 0.0f, 1.0f), ResourceStateTransitionMode.Transition);
+            deviceContext.SetRenderTargets(new[] { frontCubeTextureRtv }, null, ResourceStateTransitionMode.Transition);
             deviceContext.DrawIndexed(new()
             {
                 IndexType = Diligent.ValueType.UInt32,
@@ -379,14 +381,6 @@ namespace DiligentVolumeRendering
 
         private void CreateTextureViews(IRenderDevice renderDevice, int width, int height)
         {
-
-            //frontCubeTextureSRV?.GetTexture().Dispose();
-            //frontCubeTextureSRV?.Dispose();
-            //frontCubeTextureRTV?.Dispose();
-            //backCubeTextureSRV?.GetTexture().Dispose();
-            //backCubeTextureSRV?.Dispose();
-            //backCubeTextureRTV?.Dispose();
-
             var cubeTextureDesritpion = new TextureDesc()
             {
                 Type = ResourceDimension.Tex2d,
@@ -398,19 +392,19 @@ namespace DiligentVolumeRendering
 
             };
 
-            using var frontCubeTexture = renderDevice.CreateTexture(cubeTextureDesritpion);
-            frontCubeTextureSRV = frontCubeTexture.GetDefaultView(TextureViewType.ShaderResource);
-            frontCubeTextureRTV = frontCubeTexture.GetDefaultView(TextureViewType.RenderTarget);
+            frontCubeTexture = renderDevice.CreateTexture(cubeTextureDesritpion);
+            frontCubeTextureSrv = frontCubeTexture.GetDefaultView(TextureViewType.ShaderResource);
+            frontCubeTextureRtv = frontCubeTexture.GetDefaultView(TextureViewType.RenderTarget);
 
-            using var backTexture = renderDevice.CreateTexture(cubeTextureDesritpion);
-            backCubeTextureSRV = backTexture.GetDefaultView(TextureViewType.ShaderResource);
-            backCubeTextureRTV = backTexture.GetDefaultView(TextureViewType.RenderTarget);
+            backCubeTexture = renderDevice.CreateTexture(cubeTextureDesritpion);
+            backCubeTextureSrv = backCubeTexture.GetDefaultView(TextureViewType.ShaderResource);
+            backCubeTextureRtv = backCubeTexture.GetDefaultView(TextureViewType.RenderTarget);
 
             var shaderFrontVariable = shaderResourceBindingRayCasting.GetVariableByName(ShaderType.Pixel, "txPositionFront");
-            shaderFrontVariable.Set(frontCubeTextureSRV, SetShaderResourceFlags.None);
+            shaderFrontVariable.Set(frontCubeTextureSrv, SetShaderResourceFlags.None);
 
             var shaderBackVariable = shaderResourceBindingRayCasting.GetVariableByName(ShaderType.Pixel, "txPositionBack");
-            shaderBackVariable.Set(backCubeTextureSRV, SetShaderResourceFlags.None);
+            shaderBackVariable.Set(backCubeTextureSrv, SetShaderResourceFlags.None);
         }
 
         public void Dispose()
@@ -420,18 +414,18 @@ namespace DiligentVolumeRendering
             vertexBuffer.Dispose();
             indexBuffer.Dispose();
 
-            pipelineCubeFront.Dispose();
-            pipelineCubeBack.Dispose();
-            pipelineRaycaster.Dispose();
+            frontCubeTexture.Dispose();
+            backCubeTexture.Dispose();
+            volumeTexture.Dispose();
 
             shaderResourceBindingBack.Dispose();
             shaderResourceBindingFront.Dispose();
             shaderResourceBindingRayCasting.Dispose();
 
-            frontCubeTextureSRV.Dispose();
-            frontCubeTextureRTV.Dispose();
-            backCubeTextureSRV.Dispose();
-            backCubeTextureRTV.Dispose();
+            pipelineCubeFront.Dispose();
+            pipelineCubeBack.Dispose();
+            pipelineRaycaster.Dispose();
+
         }
     }
 
