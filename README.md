@@ -1,6 +1,6 @@
 # DiligentDotnetVolumeRendering
 
-This is example of using Diligent grpahics for volume rendering witn ray casting method.
+This is example of using Diligent grpahics for volume rendering using ray casting method.
 
 Solution needs to be configured for x64 or x86 platform.
 
