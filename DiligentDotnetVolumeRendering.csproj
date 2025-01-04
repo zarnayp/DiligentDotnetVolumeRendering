@@ -4,7 +4,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <UseWindowsForms>true</UseWindowsForms>
         <EnableDefaultItems>false</EnableDefaultItems>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <TargetFramework>net8.0-windows7.0</TargetFramework>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
 
