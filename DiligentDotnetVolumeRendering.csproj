@@ -10,9 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-        <!-- Use the latest package version
-             https://learn.microsoft.com/en-us/nuget/concepts/package-versioning#floating-version-resolutions -->
-        <PackageReference Include="DiligentGraphics.DiligentEngine.Core" Version="*-*" />
+        <PackageReference Include="DiligentGraphics.DiligentEngine.Core" Version="2.5.4" />
     </ItemGroup>
 
     <ItemGroup>
